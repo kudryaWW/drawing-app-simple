@@ -234,6 +234,45 @@ body {
     padding: 0;
     overflow-x: hidden;
 }
+        .drawing-area {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    background: white;
+    border-radius: 10px;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+canvas {
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    cursor: crosshair;
+    background: white;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* Мобильная оптимизация */
+@media (max-width: 768px) {
+    .container {
+        padding: 5px;
+        margin: 0;
+        width: 100%;
+        max-width: 100%;
+        border-radius: 0;
+    }
+    
+    .drawing-area {
+        padding: 5px;
+    }
+    
+    canvas {
+        width: 100% !important;
+        height: auto !important;
+        aspect-ratio: 8/5; /* Сохраняем пропорции 800/500 */
+    }
+}
 /* Предотвращение выделения текста на мобильных */
 canvas {
     -webkit-user-select: none;
@@ -292,41 +331,58 @@ let lastX = 0;
 let lastY = 0;
 let userCount = 1;
 
-// === ПОЛУЧЕНИЕ ПРАВИЛЬНЫХ КООРДИНАТ ===
-function getCanvasCoordinates(e) {
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    
-    if (e.type.includes('touch')) {
-        // Для тач-событий
-        const touch = e.touches[0];
-        return {
-            x: (touch.clientX - rect.left) * scaleX,
-            y: (touch.clientY - rect.top) * scaleY
-        };
-    } else {
-        // Для мыши
-        return {
-            x: e.offsetX * scaleX,
-            y: e.offsetY * scaleY
-        };
-    }
-}
+// === РАЗМЕРЫ ХОЛСТА (ФИКСИРОВАННЫЕ ДЛЯ СИНХРОНИЗАЦИИ) ===
+const CANVAS_WIDTH = 800;
+const CANVAS_HEIGHT = 500;
 
 // === НАСТРОЙКА ХОЛСТА ===
 function setupCanvas() {
-    // Устанавливаем правильные размеры canvas
-    const container = canvas.parentElement;
-    const rect = container.getBoundingClientRect();
+    // Устанавливаем фиксированные размеры для синхронизации
+    canvas.width = CANVAS_WIDTH;
+    canvas.height = CANVAS_HEIGHT;
     
-    canvas.width = rect.width - 40; // учитываем padding
-    canvas.height = Math.min(500, window.innerHeight * 0.6);
+    // Адаптируем отображение под экран
+    const container = canvas.parentElement;
+    const containerWidth = container.clientWidth;
+    const scale = Math.min(1, containerWidth / CANVAS_WIDTH);
+    
+    canvas.style.width = (CANVAS_WIDTH * scale) + 'px';
+    canvas.style.height = (CANVAS_HEIGHT * scale) + 'px';
     
     ctx.lineJoin = 'round';
     ctx.lineCap = 'round';
     ctx.strokeStyle = '#000000';
     ctx.lineWidth = 5;
+}
+
+// === ПОЛУЧЕНИЕ КООРДИНАТ ОТНОСИТЕЛЬНО РАЗМЕРОВ ХОЛСТА ===
+function getCanvasCoordinates(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    
+    let clientX, clientY;
+    
+    if (e.type.includes('touch')) {
+        // Для тач-событий
+        const touch = e.touches[0];
+        clientX = touch.clientX;
+        clientY = touch.clientY;
+    } else {
+        // Для мыши
+        clientX = e.clientX;
+        clientY = e.clientY;
+    }
+    
+    // Преобразуем в координаты холста
+    const x = (clientX - rect.left) * scaleX;
+    const y = (clientY - rect.top) * scaleY;
+    
+    // Ограничиваем координаты размерами холста
+    return {
+        x: Math.max(0, Math.min(x, canvas.width)),
+        y: Math.max(0, Math.min(y, canvas.height))
+    };
 }
 
 // === ОБНОВЛЕНИЕ РАЗМЕРА КИСТИ ===
@@ -342,28 +398,33 @@ async function startConnection() {
             .withUrl(baseUrl + "/drawingHub")
             .build();
         
+        // Когда получаем рисунок от партнёра
         connection.on("ReceiveDrawing", (startX, startY, endX, endY, color, brushSize) => {
+            console.log("Получен рисунок:", startX, startY, endX, endY);
             drawLine(startX, startY, endX, endY, color, brushSize);
         });
         
+        // Когда холст очищен
         connection.on("CanvasCleared", () => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             showMessage("Партнёр очистил холст! 🧹");
         });
         
+        // Когда обновляется количество пользователей
         connection.on("UserCountUpdated", (count) => {
             userCount = count;
             updateConnectionStatus();
         });
         
         await connection.start();
+        console.log("Подключение установлено");
         updateConnectionStatus();
         setupTouchEvents();
         
     } catch (err) {
         status.textContent = "❌ Ошибка подключения. Перезагрузите страницу.";
         status.className = "status disconnected";
-        console.error(err);
+        console.error("Ошибка подключения:", err);
     }
 }
 
@@ -388,46 +449,36 @@ function setupTouchEvents() {
         const coords = getCanvasCoordinates(e);
         isDrawing = true;
         
-        // Начинаем новый путь
-        ctx.beginPath();
-        ctx.moveTo(coords.x, coords.y);
+        lastX = coords.x;
+        lastY = coords.y;
+        
+        console.log("Начало рисования:", lastX, lastY);
+    });
+
+    // Перемещение пальца
+    canvas.addEventListener('touchmove', function(e) {
+        if (!isDrawing) return;
+        e.preventDefault();
+        
+        const coords = getCanvasCoordinates(e);
+        const color = colorPicker.value;
+        const size = parseInt(brushSize.value);
+        
+        // Рисуем локально
+        drawSmoothLine(lastX, lastY, coords.x, coords.y, color, size);
+        
+        // Отправляем партнёру ТОЧНЫЕ координаты
+        if (connection) {
+            console.log("Отправка рисунка:", lastX, lastY, coords.x, coords.y);
+            connection.invoke("SendDrawing", lastX, lastY, coords.x, coords.y, color, size)
+                .catch(err => console.error("Ошибка отправки:", err));
+        }
         
         lastX = coords.x;
         lastY = coords.y;
     });
 
-    // Перемещение пальца - ОБРАБАТЫВАЕМ ВСЕ КАСАНИЯ
-    canvas.addEventListener('touchmove', function(e) {
-        if (!isDrawing) return;
-        e.preventDefault();
-        
-        // Обрабатываем все точки касания для плавности
-        for (let i = 0; i < e.touches.length; i++) {
-            const touch = e.touches[i];
-            const fakeEvent = {
-                type: 'touch',
-                touches: [touch],
-                target: canvas
-            };
-            const coords = getCanvasCoordinates(fakeEvent);
-            
-            const color = colorPicker.value;
-            const size = parseInt(brushSize.value);
-            
-            // Рисуем плавную линию
-            drawSmoothLine(lastX, lastY, coords.x, coords.y, color, size);
-            
-            // Отправляем партнёру
-            if (connection) {
-                connection.invoke("SendDrawing", lastX, lastY, coords.x, coords.y, color, size);
-            }
-            
-            lastX = coords.x;
-            lastY = coords.y;
-        }
-    });
-
-    // Касание заканчивается
+    // Касыние заканчивается
     canvas.addEventListener('touchend', function(e) {
         e.preventDefault();
         isDrawing = false;
@@ -444,11 +495,10 @@ canvas.addEventListener('mousedown', function(e) {
     const coords = getCanvasCoordinates(e);
     isDrawing = true;
     
-    ctx.beginPath();
-    ctx.moveTo(coords.x, coords.y);
-    
     lastX = coords.x;
     lastY = coords.y;
+    
+    console.log("Начало рисования (мышь):", lastX, lastY);
 });
 
 canvas.addEventListener('mousemove', function(e) {
@@ -458,10 +508,14 @@ canvas.addEventListener('mousemove', function(e) {
     const color = colorPicker.value;
     const size = parseInt(brushSize.value);
     
+    // Рисуем локально
     drawSmoothLine(lastX, lastY, coords.x, coords.y, color, size);
     
+    // Отправляем партнёру ТОЧНЫЕ координаты
     if (connection) {
-        connection.invoke("SendDrawing", lastX, lastY, coords.x, coords.y, color, size);
+        console.log("Отправка рисунка (мышь):", lastX, lastY, coords.x, coords.y);
+        connection.invoke("SendDrawing", lastX, lastY, coords.x, coords.y, color, size)
+            .catch(err => console.error("Ошибка отправки:", err));
     }
     
     lastX = coords.x;
@@ -470,15 +524,13 @@ canvas.addEventListener('mousemove', function(e) {
 
 canvas.addEventListener('mouseup', () => {
     isDrawing = false;
-    ctx.beginPath(); // Сбрасываем путь
 });
 
 canvas.addEventListener('mouseout', () => {
     isDrawing = false;
-    ctx.beginPath(); // Сбрасываем путь
 });
 
-// === ПЛАВНОЕ РИСОВАНИЕ ЛИНИИ ===
+// === ПЛАВНОЕ РИСОВАНИЕ ЛИНИИ (ЛОКАЛЬНОЕ) ===
 function drawSmoothLine(startX, startY, endX, endY, color, brushSize) {
     ctx.lineJoin = 'round';
     ctx.lineCap = 'round';
@@ -491,7 +543,7 @@ function drawSmoothLine(startX, startY, endX, endY, color, brushSize) {
     ctx.stroke();
 }
 
-// Простая линия для получения от партнёра
+// === ПРОСТАЯ ЛИНИЯ (ДЛЯ ПОЛУЧЕНИЯ ОТ ПАРТНЁРА) ===
 function drawLine(startX, startY, endX, endY, color, brushSize) {
     ctx.strokeStyle = color;
     ctx.lineWidth = brushSize;
@@ -524,7 +576,8 @@ function updateConnectionStatus() {
 function clearCanvas() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     if (connection) {
-        connection.invoke("ClearCanvas");
+        connection.invoke("ClearCanvas")
+            .catch(err => console.error("Ошибка очистки:", err));
     }
     showMessage("Холст очищен! ✨");
 }
@@ -538,6 +591,14 @@ function drawSmallHeart() {
     
     drawHeartShape(x, y, size);
     ctx.restore();
+    
+    // Отправляем сердечко партнёру
+    if (connection) {
+        // Для простоты отправляем bounding box сердечка
+        connection.invoke("SendDrawing", x - size/2, y, x + size/2, y + size, "#ff6b6b", 3)
+            .catch(err => console.error("Ошибка отправки сердечка:", err));
+    }
+    
     showMessage("Добавлено сердечко! 💕");
 }
 
