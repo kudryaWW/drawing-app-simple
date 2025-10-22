@@ -16,6 +16,8 @@
             background: linear-gradient(45deg, #ff9a9e, #fad0c4);
             min-height: 100vh;
             padding: 20px;
+            margin: 0;
+            overflow-x: hidden;
         }
 
         .container {
@@ -47,6 +49,11 @@
             color: #155724;
         }
 
+        .connected-duo {
+            background: #fff3cd;
+            color: #856404;
+        }
+
         .disconnected {
             background: #f8d7da;
             color: #721c24;
@@ -70,14 +77,28 @@
             gap: 10px;
         }
 
+        .drawing-area {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            background: white;
+            border-radius: 10px;
+            padding: 10px;
+        }
+
         canvas {
             border: 3px solid #ddd;
             border-radius: 15px;
             cursor: crosshair;
             background: white;
-            display: block;
-            margin: 0 auto;
             max-width: 100%;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            touch-action: none;
         }
 
         button {
@@ -91,10 +112,10 @@
             transition: all 0.3s;
         }
 
-            button:hover {
-                background: #764ba2;
-                transform: translateY(-2px);
-            }
+        button:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+        }
 
         input[type="color"] {
             width: 50px;
@@ -114,174 +135,58 @@
             color: #666;
             font-size: 14px;
         }
-        .connected {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .connected-duo {
-            background: #fff3cd;
-            color: #856404;
-        }
-        /* Когда двое */
-        .disconnected {
-            background: #f8d7da;
-            color: #721c24;
-        }
 
         /* Анимация для статуса когда подключается второй */
         @keyframes pulse {
-            0% {
-                transform: scale(1);
-            }
-
-            50% {
-                transform: scale(1.05);
-            }
-
-            100% {
-                transform: scale(1);
-            }
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
         }
 
         .pulse {
             animation: pulse 1s infinite;
         }
+
         /* Мобильная оптимизация */
-@media (max-width: 768px) {
-    .container {
-        padding: 10px;
-        margin: 5px;
-    }
-    
-    canvas {
-        width: 100% !important;
-        height: 60vh !important;
-        max-width: 100%;
-    }
-    
-    .tools {
-        flex-direction: column;
-        gap: 10px;
-    }
-    
-    .tool-group {
-        justify-content: center;
-        width: 100%;
-    }
-    
-    h1 {
-        font-size: 1.8em;
-    }
-}
-/* Мобильная оптимизация */
-@media (max-width: 768px) {
-    .container {
-        padding: 10px;
-        margin: 0;
-        width: 100%;
-        max-width: 100%;
-        border-radius: 0;
-    }
-    
-    .drawing-area {
-        width: 100%;
-        overflow: hidden;
-    }
-    
-    canvas {
-        width: 100% !important;
-        height: 60vh !important;
-        max-width: 100%;
-        touch-action: none;
-    }
-    
-    .tools {
-        flex-direction: column;
-        gap: 15px;
-        padding: 10px;
-    }
-    
-    .tool-group {
-        justify-content: center;
-        width: 100%;
-    }
-    
-    h1 {
-        font-size: 1.8em;
-        margin: 10px 0;
-    }
-    
-    button {
-        padding: 15px 25px;
-        font-size: 18px;
-    }
-}
-
-/* Предотвращение выделения и масштабирования */
-canvas {
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-    -webkit-tap-highlight-color: transparent;
-    -webkit-touch-callout: none;
-    touch-action: none;
-}
-
-body {
-    margin: 0;
-    padding: 0;
-    overflow-x: hidden;
-}
-        .drawing-area {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    background: white;
-    border-radius: 10px;
-    padding: 10px;
-    box-sizing: border-box;
-}
-
-canvas {
-    border: 2px solid #ddd;
-    border-radius: 8px;
-    cursor: crosshair;
-    background: white;
-    max-width: 100%;
-    box-sizing: border-box;
-}
-
-/* Мобильная оптимизация */
-@media (max-width: 768px) {
-    .container {
-        padding: 5px;
-        margin: 0;
-        width: 100%;
-        max-width: 100%;
-        border-radius: 0;
-    }
-    
-    .drawing-area {
-        padding: 5px;
-    }
-    
-    canvas {
-        width: 100% !important;
-        height: auto !important;
-        aspect-ratio: 8/5; /* Сохраняем пропорции 800/500 */
-    }
-}
-/* Предотвращение выделения текста на мобильных */
-canvas {
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-    -webkit-tap-highlight-color: transparent;
-    -webkit-touch-callout: none;
-}
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+                margin: 5px;
+                width: calc(100% - 10px);
+                border-radius: 15px;
+            }
+            
+            .drawing-area {
+                padding: 5px;
+            }
+            
+            canvas {
+                width: 100% !important;
+                height: auto !important;
+                aspect-ratio: 8/5;
+            }
+            
+            .tools {
+                flex-direction: column;
+                gap: 15px;
+                padding: 10px;
+            }
+            
+            .tool-group {
+                justify-content: center;
+                width: 100%;
+            }
+            
+            h1 {
+                font-size: 1.8em;
+                margin: 10px 0;
+            }
+            
+            button {
+                padding: 15px 25px;
+                font-size: 18px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -303,13 +208,19 @@ canvas {
             </div>
 
             <button onclick="clearCanvas()">🧹 Очистить</button>
-            <button hidden="hidden" onclick="drawHeart()">💖 Сердечко</button>
+            <!-- Исправлено имя функции -->
+            <button onclick="drawSmallHeart()" style="display: none;">💖 Сердечко</button>
         </div>
 
-        <canvas id="drawingCanvas" width="900" height="500"></canvas>
+        <div class="drawing-area">
+            <canvas id="drawingCanvas"></canvas>
+        </div>
 
         <div class="instructions">
-            <p>...</p>
+            <p>💡 Рисуйте вместе! Всё что вы рисуете - видно другому человеку в реальном времени!</p>
+            <p style="font-size: 12px; color: #888; margin-top: 5px;">
+                Секрет: нажмите клавишу H для сердечка 💕
+            </p>
         </div>
     </div>
 
@@ -317,334 +228,292 @@ canvas {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.js"></script>
 
     <script>
-       // === НАСТРОЙКА ===
-const canvas = document.getElementById('drawingCanvas');
-const ctx = canvas.getContext('2d');
-const status = document.getElementById('status');
-const colorPicker = document.getElementById('colorPicker');
-const brushSize = document.getElementById('brushSize');
-const brushSizeValue = document.getElementById('brushSizeValue');
+        // === НАСТРОЙКА ===
+        const canvas = document.getElementById('drawingCanvas');
+        const ctx = canvas.getContext('2d');
+        const status = document.getElementById('status');
+        const colorPicker = document.getElementById('colorPicker');
+        const brushSize = document.getElementById('brushSize');
+        const brushSizeValue = document.getElementById('brushSizeValue');
 
-let connection = null;
-let isDrawing = false;
-let lastX = 0;
-let lastY = 0;
-let userCount = 1;
+        let connection = null;
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+        let userCount = 1;
 
-// === РАЗМЕРЫ ХОЛСТА (ФИКСИРОВАННЫЕ ДЛЯ СИНХРОНИЗАЦИИ) ===
-const CANVAS_WIDTH = 800;
-const CANVAS_HEIGHT = 500;
+        // === РАЗМЕРЫ ХОЛСТА (ФИКСИРОВАННЫЕ ДЛЯ СИНХРОНИЗАЦИИ) ===
+        const CANVAS_WIDTH = 800;
+        const CANVAS_HEIGHT = 500;
 
-// === НАСТРОЙКА ХОЛСТА ===
-function setupCanvas() {
-    // Устанавливаем фиксированные размеры для синхронизации
-    canvas.width = CANVAS_WIDTH;
-    canvas.height = CANVAS_HEIGHT;
-    
-    // Адаптируем отображение под экран
-    const container = canvas.parentElement;
-    const containerWidth = container.clientWidth;
-    const scale = Math.min(1, containerWidth / CANVAS_WIDTH);
-    
-    canvas.style.width = (CANVAS_WIDTH * scale) + 'px';
-    canvas.style.height = (CANVAS_HEIGHT * scale) + 'px';
-    
-    ctx.lineJoin = 'round';
-    ctx.lineCap = 'round';
-    ctx.strokeStyle = '#000000';
-    ctx.lineWidth = 5;
-}
+        // === НАСТРОЙКА ХОЛСТА ===
+        function setupCanvas() {
+            // Устанавливаем фиксированные размеры для синхронизации
+            canvas.width = CANVAS_WIDTH;
+            canvas.height = CANVAS_HEIGHT;
+            
+            // Адаптируем отображение под экран
+            const container = canvas.parentElement;
+            const containerWidth = container.clientWidth;
+            const scale = Math.min(1, containerWidth / CANVAS_WIDTH);
+            
+            canvas.style.width = (CANVAS_WIDTH * scale) + 'px';
+            canvas.style.height = (CANVAS_HEIGHT * scale) + 'px';
+            
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 5;
+        }
 
-// === ПОЛУЧЕНИЕ КООРДИНАТ ОТНОСИТЕЛЬНО РАЗМЕРОВ ХОЛСТА ===
-function getCanvasCoordinates(e) {
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    
-    let clientX, clientY;
-    
-    if (e.type.includes('touch')) {
-        // Для тач-событий
-        const touch = e.touches[0];
-        clientX = touch.clientX;
-        clientY = touch.clientY;
-    } else {
-        // Для мыши
-        clientX = e.clientX;
-        clientY = e.clientY;
-    }
-    
-    // Преобразуем в координаты холста
-    const x = (clientX - rect.left) * scaleX;
-    const y = (clientY - rect.top) * scaleY;
-    
-    // Ограничиваем координаты размерами холста
-    return {
-        x: Math.max(0, Math.min(x, canvas.width)),
-        y: Math.max(0, Math.min(y, canvas.height))
-    };
-}
+        // === ПОЛУЧЕНИЕ КООРДИНАТ ОТНОСИТЕЛЬНО РАЗМЕРОВ ХОЛСТА ===
+        function getCanvasCoordinates(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            
+            let clientX, clientY;
+            
+            if (e.type.includes('touch')) {
+                const touch = e.touches[0];
+                clientX = touch.clientX;
+                clientY = touch.clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+            
+            const x = (clientX - rect.left) * scaleX;
+            const y = (clientY - rect.top) * scaleY;
+            
+            return {
+                x: Math.max(0, Math.min(x, canvas.width)),
+                y: Math.max(0, Math.min(y, canvas.height))
+            };
+        }
 
-// === ОБНОВЛЕНИЕ РАЗМЕРА КИСТИ ===
-brushSize.addEventListener('input', function() {
-    brushSizeValue.textContent = this.value;
-});
-
-// === ПОДКЛЮЧЕНИЕ К СЕРВЕРУ ===
-async function startConnection() {
-    try {
-        const baseUrl = window.location.origin;
-        connection = new signalR.HubConnectionBuilder()
-            .withUrl(baseUrl + "/drawingHub")
-            .build();
-        
-        // Когда получаем рисунок от партнёра
-        connection.on("ReceiveDrawing", (startX, startY, endX, endY, color, brushSize) => {
-            console.log("Получен рисунок:", startX, startY, endX, endY);
-            drawLine(startX, startY, endX, endY, color, brushSize);
+        // === ОБНОВЛЕНИЕ РАЗМЕРА КИСТИ ===
+        brushSize.addEventListener('input', function() {
+            brushSizeValue.textContent = this.value;
         });
-        
-        // Когда холст очищен
-        connection.on("CanvasCleared", () => {
+
+        // === ПОДКЛЮЧЕНИЕ К СЕРВЕРУ ===
+        async function startConnection() {
+            try {
+                const baseUrl = window.location.origin;
+                connection = new signalR.HubConnectionBuilder()
+                    .withUrl(baseUrl + "/drawingHub")
+                    .build();
+                
+                connection.on("ReceiveDrawing", (startX, startY, endX, endY, color, brushSize) => {
+                    console.log("📨 Получен рисунок:", {startX, startY, endX, endY, color, brushSize});
+                    drawLine(startX, startY, endX, endY, color, brushSize);
+                });
+                
+                connection.on("CanvasCleared", () => {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    showMessage("Партнёр очистил холст! 🧹");
+                });
+                
+                connection.on("UserCountUpdated", (count) => {
+                    userCount = count;
+                    updateConnectionStatus();
+                });
+
+                // Обработка ошибок соединения
+                connection.onclose((error) => {
+                    console.error("❌ Соединение закрыто:", error);
+                    status.textContent = "❌ Соединение потеряно. Переподключаемся...";
+                    status.className = "status disconnected";
+                    setTimeout(startConnection, 5000);
+                });
+
+                await connection.start();
+                console.log("✅ Подключение установлено");
+                updateConnectionStatus();
+                setupTouchEvents();
+                
+            } catch (err) {
+                console.error("❌ Ошибка подключения:", err);
+                status.textContent = "❌ Ошибка подключения. Перезагрузите страницу.";
+                status.className = "status disconnected";
+                setTimeout(startConnection, 5000);
+            }
+        }
+
+        // === СОБЫТИЯ ДЛЯ МОБИЛЬНЫХ ===
+        function setupTouchEvents() {
+            document.addEventListener('touchstart', function(e) {
+                if (e.target === canvas) e.preventDefault();
+            }, { passive: false });
+
+            document.addEventListener('touchmove', function(e) {
+                if (e.target === canvas) e.preventDefault();
+            }, { passive: false });
+
+            canvas.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                const coords = getCanvasCoordinates(e);
+                isDrawing = true;
+                lastX = coords.x;
+                lastY = coords.y;
+            });
+
+            canvas.addEventListener('touchmove', function(e) {
+                if (!isDrawing) return;
+                e.preventDefault();
+                
+                const coords = getCanvasCoordinates(e);
+                const color = colorPicker.value;
+                const size = parseInt(brushSize.value);
+                
+                drawSmoothLine(lastX, lastY, coords.x, coords.y, color, size);
+                
+                if (connection && connection.state === signalR.HubConnectionState.Connected) {
+                    connection.invoke("SendDrawing", lastX, lastY, coords.x, coords.y, color, size)
+                        .catch(err => console.error("Ошибка отправки:", err));
+                }
+                
+                lastX = coords.x;
+                lastY = coords.y;
+            });
+
+            canvas.addEventListener('touchend', () => isDrawing = false);
+            canvas.addEventListener('touchcancel', () => isDrawing = false);
+        }
+
+        // === СОБЫТИЯ ДЛЯ КОМПЬЮТЕРА ===
+        canvas.addEventListener('mousedown', function(e) {
+            const coords = getCanvasCoordinates(e);
+            isDrawing = true;
+            lastX = coords.x;
+            lastY = coords.y;
+        });
+
+        canvas.addEventListener('mousemove', function(e) {
+            if (!isDrawing) return;
+            
+            const coords = getCanvasCoordinates(e);
+            const color = colorPicker.value;
+            const size = parseInt(brushSize.value);
+            
+            drawSmoothLine(lastX, lastY, coords.x, coords.y, color, size);
+            
+            if (connection && connection.state === signalR.HubConnectionState.Connected) {
+                connection.invoke("SendDrawing", lastX, lastY, coords.x, coords.y, color, size)
+                    .catch(err => console.error("Ошибка отправки:", err));
+            }
+            
+            lastX = coords.x;
+            lastY = coords.y;
+        });
+
+        canvas.addEventListener('mouseup', () => isDrawing = false);
+        canvas.addEventListener('mouseout', () => isDrawing = false);
+
+        // === ФУНКЦИИ РИСОВАНИЯ ===
+        function drawSmoothLine(startX, startY, endX, endY, color, brushSize) {
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+            ctx.strokeStyle = color;
+            ctx.lineWidth = brushSize;
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(endX, endY);
+            ctx.stroke();
+        }
+
+        function drawLine(startX, startY, endX, endY, color, brushSize) {
+            ctx.strokeStyle = color;
+            ctx.lineWidth = brushSize;
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(endX, endY);
+            ctx.stroke();
+        }
+
+        // === ОБНОВЛЕНИЕ СТАТУСА ===
+        function updateConnectionStatus() {
+            status.classList.remove('pulse');
+            
+            if (userCount === 1) {
+                status.textContent = "✅ Подключено! Ждём второго участника... 👀";
+                status.className = "status connected";
+            } else if (userCount === 2) {
+                status.textContent = "🎉 Второй участник подключился! Рисуйте вместе! 💕";
+                status.className = "status connected connected-duo pulse";
+            } else {
+                status.textContent = `✅ Подключено! Участников: ${userCount}`;
+                status.className = "status connected";
+            }
+        }
+
+        // === ОЧИСТКА ХОЛСТА ===
+        function clearCanvas() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            showMessage("Партнёр очистил холст! 🧹");
-        });
-        
-        // Когда обновляется количество пользователей
-        connection.on("UserCountUpdated", (count) => {
-            userCount = count;
-            updateConnectionStatus();
-        });
-        
-        await connection.start();
-        console.log("Подключение установлено");
-        updateConnectionStatus();
-        setupTouchEvents();
-        
-    } catch (err) {
-        status.textContent = "❌ Ошибка подключения. Перезагрузите страницу.";
-        status.className = "status disconnected";
-        console.error("Ошибка подключения:", err);
-    }
-}
-
-// === СОБЫТИЯ ДЛЯ МОБИЛЬНЫХ ===
-function setupTouchEvents() {
-    // Предотвращаем масштабирование и прокрутку
-    document.addEventListener('touchstart', function(e) {
-        if (e.target === canvas) {
-            e.preventDefault();
+            if (connection && connection.state === signalR.HubConnectionState.Connected) {
+                connection.invoke("ClearCanvas")
+                    .catch(err => console.error("Ошибка очистки:", err));
+            }
+            showMessage("Холст очищен! ✨");
         }
-    }, { passive: false });
 
-    document.addEventListener('touchmove', function(e) {
-        if (e.target === canvas) {
-            e.preventDefault();
+        // === СЕРДЕЧКО ===
+        function drawSmallHeart() {
+            ctx.save();
+            const x = canvas.width - 60;
+            const y = canvas.height - 60;
+            const size = 30;
+            
+            drawHeartShape(x, y, size);
+            ctx.restore();
+            
+            if (connection && connection.state === signalR.HubConnectionState.Connected) {
+                connection.invoke("SendDrawing", x - size/2, y, x + size/2, y + size, "#ff6b6b", 3)
+                    .catch(err => console.error("Ошибка отправки сердечка:", err));
+            }
+            
+            showMessage("Добавлено сердечко! 💕");
         }
-    }, { passive: false });
 
-    // Касание начинается
-    canvas.addEventListener('touchstart', function(e) {
-        e.preventDefault();
-        const coords = getCanvasCoordinates(e);
-        isDrawing = true;
-        
-        lastX = coords.x;
-        lastY = coords.y;
-        
-        console.log("Начало рисования:", lastX, lastY);
-    });
-
-    // Перемещение пальца
-    canvas.addEventListener('touchmove', function(e) {
-        if (!isDrawing) return;
-        e.preventDefault();
-        
-        const coords = getCanvasCoordinates(e);
-        const color = colorPicker.value;
-        const size = parseInt(brushSize.value);
-        
-        // Рисуем локально
-        drawSmoothLine(lastX, lastY, coords.x, coords.y, color, size);
-        
-        // Отправляем партнёру ТОЧНЫЕ координаты
-        if (connection) {
-            console.log("Отправка рисунка:", lastX, lastY, coords.x, coords.y);
-            connection.invoke("SendDrawing", lastX, lastY, coords.x, coords.y, color, size)
-                .catch(err => console.error("Ошибка отправки:", err));
+        function drawHeartShape(x, y, size) {
+            ctx.beginPath();
+            ctx.moveTo(x, y + size/4);
+            ctx.bezierCurveTo(x, y, x - size/2, y, x - size/2, y + size/4);
+            ctx.bezierCurveTo(x - size/2, y + size/2, x, y + size, x, y + size);
+            ctx.bezierCurveTo(x, y + size, x + size/2, y + size/2, x + size/2, y + size/4);
+            ctx.bezierCurveTo(x + size/2, y, x, y, x, y + size/4);
+            ctx.closePath();
+            ctx.fillStyle = "#ff6b6b";
+            ctx.fill();
         }
-        
-        lastX = coords.x;
-        lastY = coords.y;
-    });
 
-    // Касыние заканчивается
-    canvas.addEventListener('touchend', function(e) {
-        e.preventDefault();
-        isDrawing = false;
-    });
-
-    canvas.addEventListener('touchcancel', function(e) {
-        e.preventDefault();
-        isDrawing = false;
-    });
-}
-
-// === СОБЫТИЯ ДЛЯ КОМПЬЮТЕРА ===
-canvas.addEventListener('mousedown', function(e) {
-    const coords = getCanvasCoordinates(e);
-    isDrawing = true;
-    
-    lastX = coords.x;
-    lastY = coords.y;
-    
-    console.log("Начало рисования (мышь):", lastX, lastY);
-});
-
-canvas.addEventListener('mousemove', function(e) {
-    if (!isDrawing) return;
-    
-    const coords = getCanvasCoordinates(e);
-    const color = colorPicker.value;
-    const size = parseInt(brushSize.value);
-    
-    // Рисуем локально
-    drawSmoothLine(lastX, lastY, coords.x, coords.y, color, size);
-    
-    // Отправляем партнёру ТОЧНЫЕ координаты
-    if (connection) {
-        console.log("Отправка рисунка (мышь):", lastX, lastY, coords.x, coords.y);
-        connection.invoke("SendDrawing", lastX, lastY, coords.x, coords.y, color, size)
-            .catch(err => console.error("Ошибка отправки:", err));
-    }
-    
-    lastX = coords.x;
-    lastY = coords.y;
-});
-
-canvas.addEventListener('mouseup', () => {
-    isDrawing = false;
-});
-
-canvas.addEventListener('mouseout', () => {
-    isDrawing = false;
-});
-
-// === ПЛАВНОЕ РИСОВАНИЕ ЛИНИИ (ЛОКАЛЬНОЕ) ===
-function drawSmoothLine(startX, startY, endX, endY, color, brushSize) {
-    ctx.lineJoin = 'round';
-    ctx.lineCap = 'round';
-    ctx.strokeStyle = color;
-    ctx.lineWidth = brushSize;
-    
-    ctx.beginPath();
-    ctx.moveTo(startX, startY);
-    ctx.lineTo(endX, endY);
-    ctx.stroke();
-}
-
-// === ПРОСТАЯ ЛИНИЯ (ДЛЯ ПОЛУЧЕНИЯ ОТ ПАРТНЁРА) ===
-function drawLine(startX, startY, endX, endY, color, brushSize) {
-    ctx.strokeStyle = color;
-    ctx.lineWidth = brushSize;
-    ctx.lineJoin = 'round';
-    ctx.lineCap = 'round';
-    
-    ctx.beginPath();
-    ctx.moveTo(startX, startY);
-    ctx.lineTo(endX, endY);
-    ctx.stroke();
-}
-
-// === ОБНОВЛЕНИЕ СТАТУСА ПОДКЛЮЧЕНИЯ ===
-function updateConnectionStatus() {
-    status.classList.remove('pulse');
-    
-    if (userCount === 1) {
-        status.textContent = "✅ Подключено! Ждём второго участника... 👀";
-        status.className = "status connected";
-    } else if (userCount === 2) {
-        status.textContent = "🎉 Второй участник подключился! Рисуйте вместе! 💕";
-        status.className = "status connected connected-duo pulse";
-    } else {
-        status.textContent = `✅ Подключено! Участников: ${userCount}`;
-        status.className = "status connected";
-    }
-}
-
-// === ОЧИСТКА ХОЛСТА ===
-function clearCanvas() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    if (connection) {
-        connection.invoke("ClearCanvas")
-            .catch(err => console.error("Ошибка очистки:", err));
-    }
-    showMessage("Холст очищен! ✨");
-}
-
-// === РИСУЕМ СЕРДЕЧКО ===
-function drawSmallHeart() {
-    ctx.save();
-    const x = canvas.width - 60;
-    const y = canvas.height - 60;
-    const size = 30;
-    
-    drawHeartShape(x, y, size);
-    ctx.restore();
-    
-    // Отправляем сердечко партнёру
-    if (connection) {
-        // Для простоты отправляем bounding box сердечка
-        connection.invoke("SendDrawing", x - size/2, y, x + size/2, y + size, "#ff6b6b", 3)
-            .catch(err => console.error("Ошибка отправки сердечка:", err));
-    }
-    
-    showMessage("Добавлено сердечко! 💕");
-}
-
-function drawHeartShape(x, y, size) {
-    ctx.beginPath();
-    ctx.moveTo(x, y + size/4);
-    ctx.bezierCurveTo(x, y, x - size/2, y, x - size/2, y + size/4);
-    ctx.bezierCurveTo(x - size/2, y + size/2, x, y + size, x, y + size);
-    ctx.bezierCurveTo(x, y + size, x + size/2, y + size/2, x + size/2, y + size/4);
-    ctx.bezierCurveTo(x + size/2, y, x, y, x, y + size/4);
-    ctx.closePath();
-    ctx.fillStyle = "#ff6b6b";
-    ctx.fill();
-}
-
-// === ПОКАЗ СООБЩЕНИЙ ===
-function showMessage(message) {
-    const original = status.textContent;
-    status.textContent = message;
-    setTimeout(() => {
-        status.textContent = original;
-    }, 2000);
-}
-
-// === ГОРЯЧИЕ КЛАВИШИ ===
-function setupKeyboardShortcuts() {
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'h' || e.key === 'H') {
-            drawSmallHeart();
-            showMessage("Сердечко! 💕");
+        // === ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ===
+        function showMessage(message) {
+            const original = status.textContent;
+            status.textContent = message;
+            setTimeout(() => status.textContent = original, 2000);
         }
-    });
-}
 
-// === АДАПТАЦИЯ ПРИ ИЗМЕНЕНИИ РАЗМЕРА ОКНА ===
-window.addEventListener('resize', function() {
-    setupCanvas();
-});
+        function setupKeyboardShortcuts() {
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'h' || e.key === 'H') {
+                    drawSmallHeart();
+                    showMessage("Сердечко! 💕");
+                }
+            });
+        }
 
-// === ЗАПУСК ПРИ ЗАГРУЗКЕ ===
-window.onload = function() {
-    setupCanvas();
-    startConnection();
-    setupKeyboardShortcuts();
-};
-        window.onload = startConnection;
+        window.addEventListener('resize', setupCanvas);
+
+        // === ЗАПУСК ПРИ ЗАГРУЗКЕ ===
+        window.onload = function() {
+            setupCanvas();
+            startConnection();
+            setupKeyboardShortcuts();
+        };
     </script>
 </body>
 </html>
