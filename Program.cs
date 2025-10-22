@@ -8,7 +8,7 @@ builder.Services.AddCors();
 
 var app = builder.Build();
 
-// Используем CORS ДО всего остального
+// Используем CORS
 app.UseCors(policy => policy
     .AllowAnyOrigin()
     .AllowAnyMethod()
@@ -27,13 +27,16 @@ app.MapHub<DrawingHub>("/drawingHub");
 app.MapGet("/api/health", () => new { 
     status = "OK", 
     time = DateTime.UtcNow,
-    message = "Server is running"
+    message = "Server is running",
+    port = Environment.GetEnvironmentVariable("PORT")
 });
 
 // Перенаправляем с корня на нашу страницу
 app.MapGet("/", () => Results.Redirect("/index.html"));
 
-app.Run();
+// ЗАПУСК НА ПРАВИЛЬНОМ ПОРТУ
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+app.Run($"http://0.0.0.0:{port}");
 
 // Максимально простой Hub
 public class DrawingHub : Hub
