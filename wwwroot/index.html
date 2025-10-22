@@ -283,401 +283,164 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.js"></script>
 
     <script>
-        // === НАСТРОЙКА ===
-        const canvas = document.getElementById('drawingCanvas');
-        const ctx = canvas.getContext('2d');
-        const status = document.getElementById('status');
-        const colorPicker = document.getElementById('colorPicker');
-        const brushSize = document.getElementById('brushSize');
-        const brushSizeValue = document.getElementById('brushSizeValue');
-        const debugPanel = document.getElementById('debugPanel');
-        const debugInfo = document.getElementById('debugInfo');
-        const debugLog = document.getElementById('debugLog');
+       // === НАСТРОЙКА ===
+const canvas = document.getElementById('drawingCanvas');
+const ctx = canvas.getContext('2d');
+const status = document.getElementById('status');
 
-        let connection = null;
-        let isDrawing = false;
-        let lastX = 0;
-        let lastY = 0;
-        let userCount = 1;
-        let debugEnabled = false;
+let connection = null;
+let isDrawing = false;
+let lastX = 0;
+let lastY = 0;
 
-        // === РАЗМЕРЫ ХОЛСТА (ФИКСИРОВАННЫЕ ДЛЯ СИНХРОНИЗАЦИИ) ===
-        const CANVAS_WIDTH = 800;
-        const CANVAS_HEIGHT = 500;
+// === ПРОСТАЯ НАСТРОЙКА ХОЛСТА ===
+function setupCanvas() {
+    canvas.width = 800;
+    canvas.height = 500;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 5;
+}
 
-        // === ФУНКЦИИ ОТЛАДКИ ===
-        function logDebug(message) {
-            if (!debugEnabled) return;
-            
-            const timestamp = new Date().toLocaleTimeString();
-            const logEntry = document.createElement('div');
-            logEntry.textContent = `[${timestamp}] ${message}`;
-            debugLog.appendChild(logEntry);
-            debugLog.scrollTop = debugLog.scrollHeight;
-            
-            console.log(`📱 ${message}`);
-        }
-
-        function toggleDebug() {
-            debugEnabled = !debugEnabled;
-            debugPanel.style.display = debugEnabled ? 'block' : 'none';
-            logDebug(`Отладка ${debugEnabled ? 'включена' : 'выключена'}`);
-        }
-
-        function clearDebugLog() {
-            debugLog.innerHTML = '';
-            logDebug('Логи очищены');
-        }
-
-        function updateDebugInfo() {
-            if (!debugEnabled) return;
-            
-            const state = connection ? connection.state : 'Нет подключения';
-            const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            
-            debugInfo.innerHTML = `
-                Устройство: ${isMobile ? '📱 Мобильное' : '💻 Компьютер'}<br>
-                Состояние: ${state}<br>
-                Пользователей: ${userCount}<br>
-                Рисует: ${isDrawing ? '✅ Да' : '❌ Нет'}<br>
-                Координаты: ${lastX},${lastY}
-            `;
-        }
-
-        // === НАСТРОЙКА ХОЛСТА ===
-        function setupCanvas() {
-            // Устанавливаем фиксированные размеры для синхронизации
-            canvas.width = CANVAS_WIDTH;
-            canvas.height = CANVAS_HEIGHT;
-            
-            // Адаптируем отображение под экран
-            const container = canvas.parentElement;
-            const containerWidth = container.clientWidth;
-            const scale = Math.min(1, containerWidth / CANVAS_WIDTH);
-            
-            canvas.style.width = (CANVAS_WIDTH * scale) + 'px';
-            canvas.style.height = (CANVAS_HEIGHT * scale) + 'px';
-            
-            ctx.lineJoin = 'round';
-            ctx.lineCap = 'round';
-            ctx.strokeStyle = '#000000';
-            ctx.lineWidth = 5;
-
-            logDebug(`Холст настроен: ${CANVAS_WIDTH}x${CANVAS_HEIGHT}, масштаб: ${scale.toFixed(2)}`);
-        }
-
-        // === ПОЛУЧЕНИЕ КООРДИНАТ ===
-        function getCanvasCoordinates(e) {
-            const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
-            
-            let clientX, clientY;
-            
-            if (e.type.includes('touch')) {
-                const touch = e.touches[0];
-                clientX = touch.clientX;
-                clientY = touch.clientY;
-            } else {
-                clientX = e.clientX;
-                clientY = e.clientY;
-            }
-            
-            const x = (clientX - rect.left) * scaleX;
-            const y = (clientY - rect.top) * scaleY;
-            
-            return {
-                x: Math.max(0, Math.min(x, canvas.width)),
-                y: Math.max(0, Math.min(y, canvas.height))
-            };
-        }
-
-        // === ОБНОВЛЕНИЕ РАЗМЕРА КИСТИ ===
-        brushSize.addEventListener('input', function() {
-            brushSizeValue.textContent = this.value;
+// === ПРОСТОЕ ПОДКЛЮЧЕНИЕ ===
+async function startConnection() {
+    try {
+        const baseUrl = window.location.origin;
+        console.log("🔄 Connecting to:", baseUrl);
+        
+        connection = new signalR.HubConnectionBuilder()
+            .withUrl(baseUrl + "/drawingHub")
+            .withAutomaticReconnect()
+            .build();
+        
+        // Простые обработчики
+        connection.on("ReceiveDrawing", (startX, startY, endX, endY, color, brushSize) => {
+            drawLine(startX, startY, endX, endY, color, brushSize);
         });
-
-        // === ПОДКЛЮЧЕНИЕ К СЕРВЕРУ ===
-        async function startConnection() {
-            try {
-                const baseUrl = window.location.origin;
-                logDebug(`Подключение к: ${baseUrl}/drawingHub`);
-                
-                connection = new signalR.HubConnectionBuilder()
-                    .withUrl(baseUrl + "/drawingHub")
-                    .build();
-                
-                connection.on("ReceiveDrawing", (startX, startY, endX, endY, color, brushSize) => {
-                    logDebug(`📨 Получен рисунок: ${startX},${startY} -> ${endX},${endY}`);
-                    drawLine(startX, startY, endX, endY, color, brushSize);
-                });
-                
-                connection.on("CanvasCleared", () => {
-                    logDebug("🧹 Холст очищен партнёром");
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    showMessage("Партнёр очистил холст! 🧹");
-                });
-                
-                connection.on("UserCountUpdated", (count) => {
-                    userCount = count;
-                    logDebug(`👥 Пользователей: ${count}`);
-                    updateConnectionStatus();
-                });
-
-                connection.onclose((error) => {
-                    logDebug(`❌ Соединение закрыто: ${error}`);
-                    status.textContent = "❌ Соединение потеряно. Переподключаемся...";
-                    status.className = "status disconnected";
-                    setTimeout(startConnection, 5000);
-                });
-
-                await connection.start();
-                logDebug("✅ Подключение установлено");
-                updateConnectionStatus();
-                setupTouchEvents();
-                
-            } catch (err) {
-                logDebug(`❌ Ошибка подключения: ${err}`);
-                status.textContent = "❌ Ошибка подключения. Перезагрузите страницу.";
-                status.className = "status disconnected";
-                setTimeout(startConnection, 5000);
-            }
-        }
-
-        // === СОБЫТИЯ ДЛЯ МОБИЛЬНЫХ ===
-        function setupTouchEvents() {
-            document.addEventListener('touchstart', function(e) {
-                if (e.target === canvas) e.preventDefault();
-            }, { passive: false });
-
-            document.addEventListener('touchmove', function(e) {
-                if (e.target === canvas) e.preventDefault();
-            }, { passive: false });
-
-            canvas.addEventListener('touchstart', function(e) {
-                e.preventDefault();
-                const coords = getCanvasCoordinates(e);
-                isDrawing = true;
-                lastX = coords.x;
-                lastY = coords.y;
-                
-                logDebug(`👆 Touch Start: ${coords.x},${coords.y}`);
-            });
-
-            canvas.addEventListener('touchmove', function(e) {
-                if (!isDrawing) return;
-                e.preventDefault();
-                
-                const coords = getCanvasCoordinates(e);
-                logDebug(`↗️ Touch Move: ${coords.x},${coords.y}`);
-                
-                const color = colorPicker.value;
-                const size = parseInt(brushSize.value);
-                
-                drawSmoothLine(lastX, lastY, coords.x, coords.y, color, size);
-                
-                if (connection && connection.state === signalR.HubConnectionState.Connected) {
-                    logDebug(`📤 Отправка: ${lastX},${lastY} -> ${coords.x},${coords.y}`);
-                    connection.invoke("SendDrawing", lastX, lastY, coords.x, coords.y, color, size)
-                        .then(() => logDebug("✅ Данные отправлены на сервер"))
-                        .catch(err => logDebug(`❌ Ошибка отправки: ${err}`));
-                } else {
-                    logDebug("❌ Нет подключения к серверу");
-                }
-                
-                lastX = coords.x;
-                lastY = coords.y;
-            });
-
-            canvas.addEventListener('touchend', () => {
-                isDrawing = false;
-                logDebug("🔚 Touch End");
-            });
-
-            canvas.addEventListener('touchcancel', () => {
-                isDrawing = false;
-                logDebug("🚫 Touch Cancel");
-            });
-        }
-
-        // === СОБЫТИЯ ДЛЯ КОМПЬЮТЕРА ===
-        canvas.addEventListener('mousedown', function(e) {
-            const coords = getCanvasCoordinates(e);
-            isDrawing = true;
-            lastX = coords.x;
-            lastY = coords.y;
-            logDebug(`🖱️ Mouse Down: ${coords.x},${coords.y}`);
-        });
-
-        canvas.addEventListener('mousemove', function(e) {
-            if (!isDrawing) return;
-            
-            const coords = getCanvasCoordinates(e);
-            const color = colorPicker.value;
-            const size = parseInt(brushSize.value);
-            
-            drawSmoothLine(lastX, lastY, coords.x, coords.y, color, size);
-            
-            if (connection && connection.state === signalR.HubConnectionState.Connected) {
-                connection.invoke("SendDrawing", lastX, lastY, coords.x, coords.y, color, size)
-                    .catch(err => logDebug(`❌ Ошибка отправки (мышь): ${err}`));
-            }
-            
-            lastX = coords.x;
-            lastY = coords.y;
-        });
-
-        canvas.addEventListener('mouseup', () => {
-            isDrawing = false;
-            logDebug("🖱️ Mouse Up");
-        });
-
-        canvas.addEventListener('mouseout', () => {
-            isDrawing = false;
-            logDebug("🖱️ Mouse Out");
-        });
-
-        // === ФУНКЦИИ РИСОВАНИЯ ===
-        function drawSmoothLine(startX, startY, endX, endY, color, brushSize) {
-            ctx.lineJoin = 'round';
-            ctx.lineCap = 'round';
-            ctx.strokeStyle = color;
-            ctx.lineWidth = brushSize;
-            ctx.beginPath();
-            ctx.moveTo(startX, startY);
-            ctx.lineTo(endX, endY);
-            ctx.stroke();
-        }
-
-        function drawLine(startX, startY, endX, endY, color, brushSize) {
-            ctx.strokeStyle = color;
-            ctx.lineWidth = brushSize;
-            ctx.lineJoin = 'round';
-            ctx.lineCap = 'round';
-            ctx.beginPath();
-            ctx.moveTo(startX, startY);
-            ctx.lineTo(endX, endY);
-            ctx.stroke();
-        }
-
-        // === ОБНОВЛЕНИЕ СТАТУСА ===
-        function updateConnectionStatus() {
-            status.classList.remove('pulse');
-            
-            if (userCount === 1) {
-                status.textContent = "✅ Подключено! Ждём второго участника... 👀";
-                status.className = "status connected";
-            } else if (userCount === 2) {
-                status.textContent = "🎉 Второй участник подключился! Рисуйте вместе! 💕";
-                status.className = "status connected connected-duo pulse";
-            } else {
-                status.textContent = `✅ Подключено! Участников: ${userCount}`;
-                status.className = "status connected";
-            }
-        }
-
-        // === ОЧИСТКА ХОЛСТА ===
-        function clearCanvas() {
+        
+        connection.on("CanvasCleared", () => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            if (connection && connection.state === signalR.HubConnectionState.Connected) {
-                connection.invoke("ClearCanvas")
-                    .catch(err => logDebug(`❌ Ошибка очистки: ${err}`));
-            }
-            showMessage("Холст очищен! ✨");
-        }
+        });
+        
+        connection.on("UserCountUpdated", (count) => {
+            updateConnectionStatus(count);
+        });
 
-        // === ТЕСТ СОЕДИНЕНИЯ ===
-        function testMobileConnection() {
-            if (connection && connection.state === signalR.HubConnectionState.Connected) {
-                logDebug("🧪 Запуск теста связи...");
-                connection.invoke("SendDrawing", 50, 50, 100, 100, "#ff0000", 10)
-                    .then(() => {
-                        logDebug("✅ Тест пройден - сервер получил данные");
-                        alert("✅ Тест пройден! Сервер получил данные с телефона");
-                    })
-                    .catch(err => {
-                        logDebug(`❌ Тест не пройден: ${err}`);
-                        alert(`❌ Ошибка: ${err.message}`);
-                    });
-            } else {
-                logDebug("❌ Нет подключения для теста");
-                alert("❌ Нет подключения к серверу");
-            }
-        }
+        await connection.start();
+        console.log("✅ Connected to server");
+        updateConnectionStatus(1);
+        
+    } catch (err) {
+        console.error("❌ Connection failed:", err);
+        status.textContent = "❌ Connection failed. Retrying...";
+        setTimeout(startConnection, 3000);
+    }
+}
 
-        // === СЕРДЕЧКО ===
-        function drawSmallHeart() {
-            ctx.save();
-            const x = canvas.width - 60;
-            const y = canvas.height - 60;
-            const size = 30;
-            
-            drawHeartShape(x, y, size);
-            ctx.restore();
-            
-            if (connection && connection.state === signalR.HubConnectionState.Connected) {
-                connection.invoke("SendDrawing", x - size/2, y, x + size/2, y + size, "#ff6b6b", 3)
-                    .catch(err => logDebug(`❌ Ошибка отправки сердечка: ${err}`));
-            }
-            
-            showMessage("Добавлено сердечко! 💕");
-        }
+// === ПРОСТЫЕ СОБЫТИЯ ===
+function setupEvents() {
+    // Мышь
+    canvas.addEventListener('mousedown', startDraw);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDraw);
+    canvas.addEventListener('mouseout', stopDraw);
+    
+    // Тач
+    canvas.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        const coords = getTouchCoords(e);
+        startDraw({ offsetX: coords.x, offsetY: coords.y });
+    });
+    
+    canvas.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        if (!isDrawing) return;
+        const coords = getTouchCoords(e);
+        draw({ offsetX: coords.x, offsetY: coords.y });
+    });
+    
+    canvas.addEventListener('touchend', stopDraw);
+}
 
-        function drawHeartShape(x, y, size) {
-            ctx.beginPath();
-            ctx.moveTo(x, y + size/4);
-            ctx.bezierCurveTo(x, y, x - size/2, y, x - size/2, y + size/4);
-            ctx.bezierCurveTo(x - size/2, y + size/2, x, y + size, x, y + size);
-            ctx.bezierCurveTo(x, y + size, x + size/2, y + size/2, x + size/2, y + size/4);
-            ctx.bezierCurveTo(x + size/2, y, x, y, x, y + size/4);
-            ctx.closePath();
-            ctx.fillStyle = "#ff6b6b";
-            ctx.fill();
-        }
+function getTouchCoords(e) {
+    const rect = canvas.getBoundingClientRect();
+    const touch = e.touches[0];
+    return {
+        x: touch.clientX - rect.left,
+        y: touch.clientY - rect.top
+    };
+}
 
-        // === ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ===
-        function showMessage(message) {
-            const original = status.textContent;
-            status.textContent = message;
-            setTimeout(() => status.textContent = original, 2000);
-        }
+function startDraw(e) {
+    isDrawing = true;
+    [lastX, lastY] = [e.offsetX, e.offsetY];
+}
 
-        function setupKeyboardShortcuts() {
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'h' || e.key === 'H') {
-                    drawSmallHeart();
-                    showMessage("Сердечко! 💕");
-                }
-            });
-        }
+function draw(e) {
+    if (!isDrawing) return;
+    
+    const color = document.getElementById('colorPicker').value;
+    const size = parseInt(document.getElementById('brushSize').value);
+    
+    // Рисуем локально
+    ctx.beginPath();
+    ctx.moveTo(lastX, lastY);
+    ctx.lineTo(e.offsetX, e.offsetY);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = size;
+    ctx.stroke();
+    
+    // Отправляем на сервер
+    if (connection && connection.state === 'Connected') {
+        connection.invoke("SendDrawing", lastX, lastY, e.offsetX, e.offsetY, color, size)
+            .catch(err => console.log("Send error (normal):", err));
+    }
+    
+    [lastX, lastY] = [e.offsetX, e.offsetY];
+}
 
-        // === АВТОТЕСТ ДЛЯ МОБИЛЬНЫХ ===
-        function autoTestMobile() {
-            if (/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-                logDebug("📱 Обнаружено мобильное устройство");
-                setTimeout(() => {
-                    if (connection && connection.state === signalR.HubConnectionState.Connected) {
-                        logDebug("📱 Авто-тест связи...");
-                        connection.invoke("SendDrawing", 10, 10, 30, 30, "#00ff00", 5)
-                            .then(() => logDebug("📱 ✅ Авто-тест пройден"))
-                            .catch(err => logDebug(`📱 ❌ Авто-тест не пройден: ${err}`));
-                    }
-                }, 2000);
-            }
-        }
+function stopDraw() {
+    isDrawing = false;
+}
 
-        window.addEventListener('resize', setupCanvas);
+function drawLine(startX, startY, endX, endY, color, brushSize) {
+    ctx.beginPath();
+    ctx.moveTo(startX, startY);
+    ctx.lineTo(endX, endY);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = brushSize;
+    ctx.stroke();
+}
 
-        // Обновление отладочной информации
-        setInterval(updateDebugInfo, 1000);
+function updateConnectionStatus(count) {
+    if (count === 1) {
+        status.textContent = "✅ Connected! Waiting for partner... 👀";
+        status.className = "status connected";
+    } else {
+        status.textContent = `🎉 ${count} users connected! Draw together! 💕`;
+        status.className = "status connected connected-duo pulse";
+    }
+}
 
-        // === ЗАПУСК ПРИ ЗАГРУЗКЕ ===
-        window.onload = function() {
-            setupCanvas();
-            startConnection();
-            setupKeyboardShortcuts();
-            autoTestMobile();
-        };
+function clearCanvas() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (connection && connection.state === 'Connected') {
+        connection.invoke("ClearCanvas").catch(console.error);
+    }
+}
+
+// === ЗАПУСК ===
+window.onload = function() {
+    setupCanvas();
+    setupEvents();
+    startConnection();
+    
+    // Обновление размера кисти
+    document.getElementById('brushSize').addEventListener('input', function() {
+        document.getElementById('brushSizeValue').textContent = this.value;
+    });
+};
     </script>
 </body>
 </html>
