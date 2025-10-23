@@ -37,41 +37,44 @@ app.MapGet("/", () => Results.Redirect("/index.html"));
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 app.Run($"http://0.0.0.0:{port}");
 
-// УЛУЧШЕННЫЙ Hub с обработкой ошибок
+// УЛУЧШЕННЫЙ Hub с поддержкой float
 public class DrawingHub : Hub
 {
     private static int _userCount = 0;
     
-    public async Task SendDrawing(int startX, int startY, int endX, int endY, string color, int brushSize)
+    // ИЗМЕНИЛ: принимаем double вместо int
+    public async Task SendDrawing(double startX, double startY, double endX, double endY, string color, int brushSize)
     {
         try
         {
-            // ВАЛИДАЦИЯ и ЗАЩИТА от плохих данных
+            // ВАЛИДАЦИЯ
             if (color == null) color = "#000000";
             if (brushSize < 1) brushSize = 5;
             if (brushSize > 50) brushSize = 50;
             
-            // Логируем ВСЕ входящие данные
-            Console.WriteLine($"🎨 RECEIVED: {startX},{startY} -> {endX},{endY} color:{color} size:{brushSize} from:{Context.ConnectionId}");
+            // Преобразуем double в int (округляем)
+            int startXInt = (int)Math.Round(startX);
+            int startYInt = (int)Math.Round(startY);
+            int endXInt = (int)Math.Round(endX);
+            int endYInt = (int)Math.Round(endY);
             
-            // Проверяем что координаты валидны
-            if (Math.Abs(startX) > 10000 || Math.Abs(startY) > 10000 || 
-                Math.Abs(endX) > 10000 || Math.Abs(endY) > 10000)
-            {
-                Console.WriteLine($"⚠️  Invalid coordinates: {startX},{startY} -> {endX},{endY}");
-                return;
-            }
+            // Ограничиваем координаты
+            startXInt = Math.Clamp(startXInt, 0, 800);
+            startYInt = Math.Clamp(startYInt, 0, 500);
+            endXInt = Math.Clamp(endXInt, 0, 800);
+            endYInt = Math.Clamp(endYInt, 0, 500);
+            
+            Console.WriteLine($"🎨 RECEIVED: {startX:F2},{startY:F2} -> {endX:F2},{endY:F2} (converted to: {startXInt},{startYInt} -> {endXInt},{endYInt})");
             
             // Отправляем всем кроме отправителя
-            await Clients.Others.SendAsync("ReceiveDrawing", startX, startY, endX, endY, color, brushSize);
+            await Clients.Others.SendAsync("ReceiveDrawing", startXInt, startYInt, endXInt, endYInt, color, brushSize);
             
-            Console.WriteLine($"✅ SENT to others: {startX},{startY} -> {endX},{endY}");
+            Console.WriteLine($"✅ SENT to others: {startXInt},{startYInt} -> {endXInt},{endYInt}");
         }
         catch (Exception ex)
         {
-            // Логируем ошибку но НЕ падаем
             Console.WriteLine($"❌ ERROR in SendDrawing: {ex.Message}");
-            Console.WriteLine($"❌ StackTrace: {ex.StackTrace}");
+            Console.WriteLine($"❌ Data: {startX},{startY} -> {endX},{endY} color:{color} size:{brushSize}");
         }
     }
     
