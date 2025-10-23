@@ -293,8 +293,6 @@ let isDrawing = false;
 let lastX = 0;
 let lastY = 0;
 let userCount = 1;
-let currentTouch = null; // Текущее касание
-let sendInterval = null; // Интервал для отправки
 
 // === ФИКСИРОВАННЫЕ РАЗМЕРЫ ===
 const CANVAS_WIDTH = 800;
@@ -318,7 +316,7 @@ function setupCanvas() {
     ctx.lineWidth = 5;
 }
 
-// === ПОЛУЧЕНИЕ КООРДИНАТ ===
+// === ПРОСТОЕ ПОЛУЧЕНИЕ КООРДИНАТ ===
 function getCoordinates(e) {
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
@@ -329,17 +327,18 @@ function getCoordinates(e) {
     if (e.touches && e.touches[0]) {
         clientX = e.touches[0].clientX - rect.left;
         clientY = e.touches[0].clientY - rect.top;
-    } else if (e.offsetX !== undefined) {
+    } else {
         clientX = e.offsetX;
         clientY = e.offsetY;
-    } else {
-        clientX = e.clientX - rect.left;
-        clientY = e.clientY - rect.top;
     }
     
+    const x = clientX * scaleX;
+    const y = clientY * scaleY;
+    
+    // ОГРАНИЧИВАЕМ координаты
     return {
-        x: Math.max(0, Math.min(clientX * scaleX, canvas.width)),
-        y: Math.max(0, Math.min(clientY * scaleY, canvas.height))
+        x: Math.max(0, Math.min(x, canvas.width)),
+        y: Math.max(0, Math.min(y, canvas.height))
     };
 }
 
@@ -352,7 +351,7 @@ async function startConnection() {
             .build();
         
         connection.on("ReceiveDrawing", (startX, startY, endX, endY, color, brushSize) => {
-            console.log(`🎨 FROM SERVER: ${startX},${startY} -> ${endX},${endY}`);
+            console.log(`🎨 RECEIVED: ${startX},${startY} -> ${endX},${endY}`);
             drawLine(startX, startY, endX, endY, color, brushSize);
         });
         
@@ -366,7 +365,7 @@ async function startConnection() {
         });
 
         await connection.start();
-        console.log("✅ CONNECTED");
+        console.log("✅ CONNECTED to server");
         updateConnectionStatus();
         
     } catch (err) {
@@ -376,36 +375,22 @@ async function startConnection() {
     }
 }
 
-// === ОСНОВНАЯ ФУНКЦИЯ ОТПРАВКИ ===
-function sendDrawingData(startX, startY, endX, endY, color = null, brushSize = null) {
-    if (!connection || connection.state !== 'Connected') return;
-    
-    const actualColor = color || document.getElementById('colorPicker').value;
-    const actualSize = brushSize || parseInt(document.getElementById('brushSize').value);
-    
-    connection.invoke("SendDrawing", startX, startY, endX, endY, actualColor, actualSize)
-        .then(() => {
-            console.log(`✅ SENT: ${startX},${startY} -> ${endX},${endY}`);
-        })
-        .catch(err => {
-            console.error("❌ Send error:", err);
-        });
-}
-
-// === КОМПЬЮТЕР: ПРОСТЫЕ СОБЫТИЯ МЫШИ ===
-function setupMouseEvents() {
-    canvas.addEventListener('mousedown', function(e) {
+// === ПРОСТЫЕ СОБЫТИЯ ===
+function setupEvents() {
+    // ОБЩИЕ ОБРАБОТЧИКИ
+    const startDraw = function(e) {
+        e.preventDefault();
         const coords = getCoordinates(e);
         isDrawing = true;
         lastX = coords.x;
         lastY = coords.y;
         
-        // Начало линии - отправляем точку
-        sendDrawingData(coords.x, coords.y, coords.x, coords.y);
-    });
+        console.log(`▶️ START: ${coords.x}, ${coords.y}`);
+    };
 
-    canvas.addEventListener('mousemove', function(e) {
+    const drawing = function(e) {
         if (!isDrawing) return;
+        e.preventDefault();
         
         const coords = getCoordinates(e);
         const color = document.getElementById('colorPicker').value;
@@ -420,121 +405,34 @@ function setupMouseEvents() {
         ctx.stroke();
         
         // Отправляем на сервер
-        sendDrawingData(lastX, lastY, coords.x, coords.y, color, size);
+        if (connection && connection.state === 'Connected') {
+            connection.invoke("SendDrawing", lastX, lastY, coords.x, coords.y, color, size)
+                .then(() => console.log(`📤 SENT: ${lastX},${lastY} -> ${coords.x},${coords.y}`))
+                .catch(err => console.error("❌ Send error:", err));
+        }
         
         lastX = coords.x;
         lastY = coords.y;
-    });
+    };
 
-    canvas.addEventListener('mouseup', function() {
-        isDrawing = false;
-    });
-
-    canvas.addEventListener('mouseout', function() {
-        isDrawing = false;
-    });
-}
-
-// === ТЕЛЕФОН: РАДИКАЛЬНО НОВЫЙ ПОДХОД ===
-function setupTouchEvents() {
-    let lastSentTime = 0;
-    const SEND_INTERVAL = 50; // Отправляем каждые 50мс
-    
-    canvas.addEventListener('touchstart', function(e) {
-        e.preventDefault();
-        const coords = getCoordinates(e);
-        isDrawing = true;
-        currentTouch = e.touches[0];
-        lastX = coords.x;
-        lastY = coords.y;
-        
-        console.log(`📱 TOUCH START: ${coords.x}, ${coords.y}`);
-        
-        // Сразу отправляем первую точку
-        sendDrawingData(coords.x, coords.y, coords.x, coords.y);
-        
-        // ЗАПУСКАЕМ ИНТЕРВАЛ для постоянной отправки данных
-        sendInterval = setInterval(() => {
-            if (!isDrawing || !currentTouch) return;
-            
-            const now = Date.now();
-            if (now - lastSentTime < SEND_INTERVAL) return;
-            
-            // Создаем искусственное событие для получения текущих координат
-            const fakeEvent = {
-                touches: [currentTouch],
-                type: 'touch'
-            };
-            const currentCoords = getCoordinates(fakeEvent);
-            
-            // Рисуем локально
-            const color = document.getElementById('colorPicker').value;
-            const size = parseInt(document.getElementById('brushSize').value);
-            
-            ctx.beginPath();
-            ctx.moveTo(lastX, lastY);
-            ctx.lineTo(currentCoords.x, currentCoords.y);
-            ctx.strokeStyle = color;
-            ctx.lineWidth = size;
-            ctx.stroke();
-            
-            // Отправляем на сервер
-            sendDrawingData(lastX, lastY, currentCoords.x, currentCoords.y, color, size);
-            
-            lastX = currentCoords.x;
-            lastY = currentCoords.y;
-            lastSentTime = now;
-            
-        }, 16); // ~60fps
-    });
-
-    canvas.addEventListener('touchmove', function(e) {
-        if (!isDrawing) return;
-        e.preventDefault();
-        currentTouch = e.touches[0]; // Обновляем текущее касание
-    });
-
-    canvas.addEventListener('touchend', function(e) {
+    const endDraw = function(e) {
         e.preventDefault();
         isDrawing = false;
-        currentTouch = null;
-        
-        // ОСТАНАВЛИВАЕМ интервал
-        if (sendInterval) {
-            clearInterval(sendInterval);
-            sendInterval = null;
-        }
-        
-        console.log("📱 TOUCH END");
-    });
+        console.log("⏹️ END");
+    };
 
-    canvas.addEventListener('touchcancel', function(e) {
-        e.preventDefault();
-        isDrawing = false;
-        currentTouch = null;
-        
-        if (sendInterval) {
-            clearInterval(sendInterval);
-            sendInterval = null;
-        }
-    });
-}
-
-// === УНИВЕРСАЛЬНАЯ НАСТРОЙКА СОБЫТИЙ ===
-function setupEvents() {
-    const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    // ДОБАВЛЯЕМ СОБЫТИЯ
+    canvas.addEventListener('mousedown', startDraw);
+    canvas.addEventListener('mousemove', drawing);
+    canvas.addEventListener('mouseup', endDraw);
+    canvas.addEventListener('mouseout', endDraw);
     
-    console.log(`📱 Device type: ${isMobile ? 'MOBILE' : 'DESKTOP'}`);
+    canvas.addEventListener('touchstart', startDraw);
+    canvas.addEventListener('touchmove', drawing);
+    canvas.addEventListener('touchend', endDraw);
+    canvas.addEventListener('touchcancel', endDraw);
     
-    if (isMobile) {
-        // ТЕЛЕФОН: используем улучшенные touch события
-        setupTouchEvents();
-    } else {
-        // КОМПЬЮТЕР: используем mouse события
-        setupMouseEvents();
-    }
-    
-    // Предотвращаем скролл на мобильных
+    // Предотвращаем скролл
     document.addEventListener('touchstart', function(e) {
         if (e.target === canvas) e.preventDefault();
     }, { passive: false });
@@ -544,7 +442,7 @@ function setupEvents() {
     }, { passive: false });
 }
 
-// === ПРОСТОЕ РИСОВАНИЕ ЛИНИИ ===
+// === ПРОСТОЕ РИСОВАНИЕ ===
 function drawLine(startX, startY, endX, endY, color, brushSize) {
     ctx.strokeStyle = color;
     ctx.lineWidth = brushSize;
