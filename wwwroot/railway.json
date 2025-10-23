@@ -1,0 +1,8 @@
+{
+  "build": {
+    "builder": "nixpacks"
+  },
+  "deploy": {
+    "startCommand": "dotnet DrawingApp.dll --urls http://0.0.0.0:8080"
+  }
+}
