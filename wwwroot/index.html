@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Наш Рисунок 💕</title>
+    <title>Наш Совместный Рисунок 💕</title>
     <style>
         * {
             margin: 0;
@@ -13,86 +13,261 @@
 
         body {
             font-family: 'Arial', sans-serif;
-            background: linear-gradient(45deg, #ff9a9e, #fad0c4);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
-            margin: 0;
-            overflow-x: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            background: white;
+            background: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
-            padding: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            max-width: 900px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
         }
 
         h1 {
-            text-align: center;
             color: #333;
-            margin-bottom: 20px;
-            font-size: 2.5em;
+            font-size: 2.8em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1em;
+            opacity: 0.8;
         }
 
         .status {
             text-align: center;
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 10px;
+            padding: 12px;
+            margin: 20px 0;
+            border-radius: 12px;
             font-weight: bold;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
         }
 
-        .connected {
+        .status.connected {
             background: #d4edda;
+            border-color: #c3e6cb;
             color: #155724;
         }
 
-        .connected-duo {
+        .status.connected-duo {
             background: #fff3cd;
+            border-color: #ffeaa7;
             color: #856404;
-        }
-
-        .disconnected {
-            background: #f8d7da;
-            color: #721c24;
+            animation: glow 2s infinite;
         }
 
         .tools {
-            background: #f8f9fa;
-            padding: 15px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 20px;
             border-radius: 15px;
-            margin: 20px 0;
+            margin: 25px 0;
             display: flex;
-            gap: 20px;
+            gap: 25px;
             align-items: center;
             flex-wrap: wrap;
             justify-content: center;
+            border: 1px solid rgba(255,255,255,0.5);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
         }
 
         .tool-group {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            padding: 8px 16px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .tool-group label {
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.95em;
         }
 
         .drawing-area {
-            width: 100%;
-            display: flex;
-            justify-content: center;
             background: white;
-            border-radius: 10px;
-            padding: 10px;
-            position: relative;
+            border-radius: 15px;
+            padding: 15px;
+            margin: 20px 0;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            border: 1px solid rgba(0,0,0,0.1);
         }
 
         canvas {
-            border: 3px solid #ddd;
-            border-radius: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
             cursor: crosshair;
             background: white;
-            max-width: 100%;
+            width: 100%;
+            display: block;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+            transition: border-color 0.3s ease;
+        }
+
+        canvas:hover {
+            border-color: #667eea;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        input[type="color"] {
+            width: 60px;
+            height: 45px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="color"]:hover {
+            border-color: #667eea;
+        }
+
+        input[type="range"] {
+            width: 120px;
+            height: 6px;
+            border-radius: 3px;
+            background: #e9ecef;
+            outline: none;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+
+        .brush-size-value {
+            font-weight: 600;
+            color: #495057;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .instructions {
+            text-align: center;
+            margin-top: 25px;
+            color: #6c757d;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+
+        .heart {
+            color: #ff6b6b;
+            animation: heartbeat 1.5s ease-in-out infinite;
+        }
+
+        /* Анимации */
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(255, 193, 7, 0.4); }
+            50% { box-shadow: 0 0 30px rgba(255, 193, 7, 0.8); }
+        }
+
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        /* Мобильная адаптация */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .container {
+                padding: 20px;
+                border-radius: 15px;
+            }
+            
+            h1 {
+                font-size: 2.2em;
+            }
+            
+            .tools {
+                flex-direction: column;
+                gap: 15px;
+                padding: 15px;
+            }
+            
+            .tool-group {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            button {
+                width: 100%;
+                padding: 16px;
+            }
+            
+            .drawing-area {
+                padding: 10px;
+            }
+            
+            input[type="range"] {
+                width: 100px;
+            }
+        }
+
+        /* Предотвращение выделения */
+        canvas {
             -webkit-user-select: none;
             -moz-user-select: none;
             -ms-user-select: none;
@@ -101,170 +276,30 @@
             -webkit-touch-callout: none;
             touch-action: none;
         }
-
-        button {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: all 0.3s;
-        }
-
-        button:hover {
-            background: #764ba2;
-            transform: translateY(-2px);
-        }
-
-        input[type="color"] {
-            width: 50px;
-            height: 40px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-
-        input[type="range"] {
-            width: 100px;
-        }
-
-        .instructions {
-            text-align: center;
-            margin-top: 20px;
-            color: #666;
-            font-size: 14px;
-        }
-
-        /* Панель отладки */
-        .debug-panel {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            background: rgba(0,0,0,0.9);
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-            font-size: 12px;
-            z-index: 1000;
-            max-width: 200px;
-            font-family: monospace;
-        }
-
-        .debug-toggle {
-            position: fixed;
-            top: 10px;
-            left: 10px;
-            background: rgba(0,0,0,0.7);
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 5px;
-            cursor: pointer;
-            z-index: 1000;
-            font-size: 12px;
-        }
-
-        /* Анимация для статуса когда подключается второй */
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-
-        .pulse {
-            animation: pulse 1s infinite;
-        }
-
-        /* Мобильная оптимизация */
-        @media (max-width: 768px) {
-            .container {
-                padding: 10px;
-                margin: 5px;
-                width: calc(100% - 10px);
-                border-radius: 15px;
-            }
-            
-            .drawing-area {
-                padding: 5px;
-            }
-            
-            canvas {
-                width: 100% !important;
-                height: auto !important;
-                aspect-ratio: 8/5;
-            }
-            
-            .tools {
-                flex-direction: column;
-                gap: 15px;
-                padding: 10px;
-            }
-            
-            .tool-group {
-                justify-content: center;
-                width: 100%;
-            }
-            
-            h1 {
-                font-size: 1.8em;
-                margin: 10px 0;
-            }
-            
-            button {
-                padding: 15px 25px;
-                font-size: 18px;
-            }
-
-            .debug-panel {
-                top: 5px;
-                right: 5px;
-                font-size: 10px;
-                max-width: 150px;
-            }
-
-            .debug-toggle {
-                top: 5px;
-                left: 5px;
-                padding: 6px 10px;
-                font-size: 10px;
-            }
-        }
     </style>
 </head>
 <body>
-    <!-- Кнопка переключения отладки -->
-    <button class="debug-toggle" onclick="toggleDebug()">🐛 Отладка</button>
-
-    <!-- Панель отладки -->
-    <div class="debug-panel" id="debugPanel" style="display: none;">
-        <strong>Отладка:</strong>
-        <div id="debugInfo">Загрузка...</div>
-        <button onclick="testMobileConnection()" style="font-size: 10px; padding: 5px; margin-top: 5px; width: 100%;">📱 Тест связи</button>
-        <button onclick="clearDebugLog()" style="font-size: 10px; padding: 5px; margin-top: 2px; width: 100%;">🧹 Очистить логи</button>
-        <div id="debugLog" style="margin-top: 5px; max-height: 100px; overflow-y: auto; font-size: 10px;"></div>
-    </div>
-
     <div class="container">
-        <h1>🎨 Наш Совместный Рисунок</h1>
+        <div class="header">
+            <h1>🎨 Наш Совместный Рисунок</h1>
+            <div class="subtitle">Рисуйте вместе в реальном времени</div>
+        </div>
 
         <div class="status" id="status">Подключаемся к серверу...</div>
 
         <div class="tools">
             <div class="tool-group">
-                <strong>Цвет:</strong>
+                <label>🎨 Цвет:</label>
                 <input type="color" id="colorPicker" value="#000000">
             </div>
 
             <div class="tool-group">
-                <strong>Кисть:</strong>
+                <label>🖌️ Кисть:</label>
                 <input type="range" id="brushSize" min="1" max="30" value="5">
-                <span id="brushSizeValue">5</span>
+                <span class="brush-size-value" id="brushSizeValue">5</span>
             </div>
 
-            <button onclick="clearCanvas()">🧹 Очистить</button>
-            <button onclick="drawSmallHeart()" style="display: none;">💖 Сердечко</button>
+            <button onclick="clearCanvas()">🧹 Очистить холст</button>
         </div>
 
         <div class="drawing-area">
@@ -272,10 +307,8 @@
         </div>
 
         <div class="instructions">
-            <p>💡 Рисуйте вместе! Всё что вы рисуете - видно другому человеку в реальном времени!</p>
-            <p style="font-size: 12px; color: #888; margin-top: 5px;">
-                Секрет: нажмите клавишу H для сердечка 💕
-            </p>
+            <p>💫 <strong>Как пользоваться:</strong> Откройте эту страницу на двух устройствах и рисуйте вместе!</p>
+            <p>✨ <strong>Секрет:</strong> Нажмите клавишу <strong>H</strong> для добавления сердечка <span class="heart">💖</span></p>
         </div>
     </div>
 
@@ -283,338 +316,257 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.js"></script>
 
     <script>
-       // === НАСТРОЙКА ===
-const canvas = document.getElementById('drawingCanvas');
-const ctx = canvas.getContext('2d');
-const status = document.getElementById('status');
+        // === НАСТРОЙКА ===
+        const canvas = document.getElementById('drawingCanvas');
+        const ctx = canvas.getContext('2d');
+        const status = document.getElementById('status');
+        const colorPicker = document.getElementById('colorPicker');
+        const brushSize = document.getElementById('brushSize');
+        const brushSizeValue = document.getElementById('brushSizeValue');
 
-let connection = null;
-let isDrawing = false;
-let lastX = 0;
-let lastY = 0;
-let userCount = 1;
-let isMobile = false;
+        let connection = null;
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+        let userCount = 1;
+        let isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-// === ФИКСИРОВАННЫЕ РАЗМЕРЫ ===
-const CANVAS_WIDTH = 800;
-const CANVAS_HEIGHT = 500;
+        // === ФИКСИРОВАННЫЕ РАЗМЕРЫ ===
+        const CANVAS_WIDTH = 800;
+        const CANVAS_HEIGHT = 500;
 
-// === НАСТРОЙКА ХОЛСТА ===
-function setupCanvas() {
-    canvas.width = CANVAS_WIDTH;
-    canvas.height = CANVAS_HEIGHT;
-    
-    const container = canvas.parentElement;
-    const maxWidth = container.clientWidth - 40;
-    const scale = maxWidth / CANVAS_WIDTH;
-    
-    canvas.style.width = (CANVAS_WIDTH * scale) + 'px';
-    canvas.style.height = (CANVAS_HEIGHT * scale) + 'px';
-    
-    ctx.lineJoin = 'round';
-    ctx.lineCap = 'round';
-    ctx.strokeStyle = '#000000';
-    ctx.lineWidth = 5;
-    
-    console.log(`🎨 Canvas: ${canvas.width}x${canvas.height}, Scale: ${scale}`);
-}
+        // === НАСТРОЙКА ХОЛСТА ===
+        function setupCanvas() {
+            canvas.width = CANVAS_WIDTH;
+            canvas.height = CANVAS_HEIGHT;
+            
+            const container = canvas.parentElement;
+            const maxWidth = container.clientWidth - 30;
+            const scale = maxWidth / CANVAS_WIDTH;
+            
+            canvas.style.width = (CANVAS_WIDTH * scale) + 'px';
+            canvas.style.height = (CANVAS_HEIGHT * scale) + 'px';
+            
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 5;
+        }
 
-// === ПРОСТОЕ ПОЛУЧЕНИЕ КООРДИНАТ ===
-function getCoordinates(e) {
-    const rect = canvas.getBoundingClientRect();
-    
-    let x, y;
-    
-    if (e.touches && e.touches[0]) {
-        // Для touch событий
-        x = e.touches[0].clientX - rect.left;
-        y = e.touches[0].clientY - rect.top;
-    } else {
-        // Для mouse событий
-        x = e.offsetX;
-        y = e.offsetY;
-    }
-    
-    // Масштабируем к реальным размерам холста
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    
-    return {
-        x: Math.max(0, Math.min(x * scaleX, canvas.width)),
-        y: Math.max(0, Math.min(y * scaleY, canvas.height))
-    };
-}
+        // === ПОЛУЧЕНИЕ КООРДИНАТ ===
+        function getCoordinates(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            
+            let clientX, clientY;
+            
+            if (e.touches && e.touches[0]) {
+                clientX = e.touches[0].clientX - rect.left;
+                clientY = e.touches[0].clientY - rect.top;
+            } else {
+                clientX = e.offsetX;
+                clientY = e.offsetY;
+            }
+            
+            const x = clientX * scaleX;
+            const y = clientY * scaleY;
+            
+            return {
+                x: Math.max(0, Math.min(x, canvas.width)),
+                y: Math.max(0, Math.min(y, canvas.height))
+            };
+        }
 
-// === ПОДКЛЮЧЕНИЕ ===
-async function startConnection() {
-    try {
-        connection = new signalR.HubConnectionBuilder()
-            .withUrl(window.location.origin + "/drawingHub")
-            .withAutomaticReconnect()
-            .build();
-        
-        connection.on("ReceiveDrawing", (startX, startY, endX, endY, color, brushSize) => {
-            console.log(`🎨 RECEIVED: ${startX},${startY} -> ${endX},${endY}`);
-            drawLine(startX, startY, endX, endY, color, brushSize);
-        });
-        
-        connection.on("CanvasCleared", () => {
+        // === ПОДКЛЮЧЕНИЕ ===
+        async function startConnection() {
+            try {
+                connection = new signalR.HubConnectionBuilder()
+                    .withUrl(window.location.origin + "/drawingHub")
+                    .withAutomaticReconnect()
+                    .build();
+                
+                connection.on("ReceiveDrawing", (startX, startY, endX, endY, color, brushSize) => {
+                    drawLine(startX, startY, endX, endY, color, brushSize);
+                });
+                
+                connection.on("CanvasCleared", () => {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                });
+                
+                connection.on("UserCountUpdated", (count) => {
+                    userCount = count;
+                    updateConnectionStatus();
+                });
+
+                await connection.start();
+                updateConnectionStatus();
+                
+            } catch (err) {
+                status.textContent = "❌ Ошибка подключения. Переподключаемся...";
+                status.className = "status";
+                setTimeout(startConnection, 3000);
+            }
+        }
+
+        // === СОБЫТИЯ ===
+        function setupEvents() {
+            const startDraw = function(e) {
+                e.preventDefault();
+                const coords = getCoordinates(e);
+                isDrawing = true;
+                lastX = coords.x;
+                lastY = coords.y;
+                
+                if (isMobile) {
+                    const color = document.getElementById('colorPicker').value;
+                    const size = parseInt(document.getElementById('brushSize').value);
+                    sendDrawingData(coords.x, coords.y, coords.x, coords.y, color, size);
+                }
+            };
+
+            const drawing = function(e) {
+                if (!isDrawing) return;
+                e.preventDefault();
+                
+                const coords = getCoordinates(e);
+                const color = document.getElementById('colorPicker').value;
+                const size = parseInt(document.getElementById('brushSize').value);
+                
+                // Рисуем локально
+                ctx.beginPath();
+                ctx.moveTo(lastX, lastY);
+                ctx.lineTo(coords.x, coords.y);
+                ctx.strokeStyle = color;
+                ctx.lineWidth = size;
+                ctx.stroke();
+                
+                // Отправляем на сервер
+                if (coords.x !== lastX || coords.y !== lastY) {
+                    sendDrawingData(lastX, lastY, coords.x, coords.y, color, size);
+                }
+                
+                lastX = coords.x;
+                lastY = coords.y;
+            };
+
+            const endDraw = function(e) {
+                e.preventDefault();
+                isDrawing = false;
+            };
+
+            // Добавляем события
+            canvas.addEventListener('mousedown', startDraw);
+            canvas.addEventListener('mousemove', drawing);
+            canvas.addEventListener('mouseup', endDraw);
+            canvas.addEventListener('mouseout', endDraw);
+            
+            canvas.addEventListener('touchstart', startDraw);
+            canvas.addEventListener('touchmove', drawing);
+            canvas.addEventListener('touchend', endDraw);
+            canvas.addEventListener('touchcancel', endDraw);
+            
+            // Предотвращаем скролл
+            document.addEventListener('touchstart', function(e) {
+                if (e.target === canvas) e.preventDefault();
+            }, { passive: false });
+            
+            document.addEventListener('touchmove', function(e) {
+                if (e.target === canvas) e.preventDefault();
+            }, { passive: false });
+        }
+
+        // === ОТПРАВКА ДАННЫХ ===
+        function sendDrawingData(startX, startY, endX, endY, color, brushSize) {
+            if (!connection || connection.state !== 'Connected') return;
+            
+            const startXInt = Math.round(startX);
+            const startYInt = Math.round(startY);
+            const endXInt = Math.round(endX);
+            const endYInt = Math.round(endY);
+            
+            connection.invoke("SendDrawing", startXInt, startYInt, endXInt, endYInt, color, brushSize)
+                .catch(err => {}); // Игнорируем ошибки
+        }
+
+        // === РИСОВАНИЕ ЛИНИИ ===
+        function drawLine(startX, startY, endX, endY, color, brushSize) {
+            ctx.strokeStyle = color;
+            ctx.lineWidth = brushSize;
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+            
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(endX, endY);
+            ctx.stroke();
+        }
+
+        // === ОБНОВЛЕНИЕ СТАТУСА ===
+        function updateConnectionStatus() {
+            if (userCount === 1) {
+                status.textContent = "✅ Подключено! Ждём второго участника... 👀";
+                status.className = "status connected";
+            } else {
+                status.textContent = `🎉 Второй участник подключился! Рисуйте вместе! 💕`;
+                status.className = "status connected connected-duo pulse";
+            }
+        }
+
+        // === ОЧИСТКА ХОЛСТА ===
+        function clearCanvas() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-        });
-        
-        connection.on("UserCountUpdated", (count) => {
-            userCount = count;
-            updateConnectionStatus();
-        });
-
-        await connection.start();
-        console.log("✅ CONNECTED to server");
-        updateConnectionStatus();
-        
-    } catch (err) {
-        console.error("❌ Connection failed:", err);
-        status.textContent = "❌ Connection failed. Retrying...";
-        setTimeout(startConnection, 3000);
-    }
-}
-
-// === ОТПРАВКА ДАННЫХ ===
-function sendDrawingData(startX, startY, endX, endY, color, brushSize) {
-    if (!connection || connection.state !== 'Connected') {
-        console.log("❌ No connection");
-        return;
-    }
-    
-    // ПРЕОБРАЗУЕМ в целые числа перед отправкой
-    const startXInt = Math.round(startX);
-    const startYInt = Math.round(startY);
-    const endXInt = Math.round(endX);
-    const endYInt = Math.round(endY);
-    
-    // Проверяем что это настоящая линия (не точка)
-    const isPoint = (startXInt === endXInt && startYInt === endYInt);
-    
-    if (isPoint && !isMobile) {
-        // На компьютере не отправляем точки
-        return;
-    }
-    
-    console.log(`📤 SENDING: ${startXInt},${startYInt} -> ${endXInt},${endYInt} (from ${startX.toFixed(2)},${startY.toFixed(2)} -> ${endX.toFixed(2)},${endY.toFixed(2)})`);
-    
-    connection.invoke("SendDrawing", startXInt, startYInt, endXInt, endYInt, color, brushSize)
-        .then(() => {
-            if (!isPoint) {
-                console.log("✅ Line sent successfully");
-            }
-        })
-        .catch(err => {
-            console.error("❌ Send error:", err);
-        });
-}
-
-// === СОБЫТИЯ ДЛЯ КОМПЬЮТЕРА ===
-function setupMouseEvents() {
-    console.log("🖱️ Setting up MOUSE events");
-    
-    canvas.addEventListener('mousedown', function(e) {
-        const coords = getCoordinates(e);
-        isDrawing = true;
-        lastX = coords.x;
-        lastY = coords.y;
-        
-        console.log(`🖱️ MOUSE START: ${coords.x}, ${coords.y}`);
-    });
-
-    canvas.addEventListener('mousemove', function(e) {
-        if (!isDrawing) return;
-        
-        const coords = getCoordinates(e);
-        const color = document.getElementById('colorPicker').value;
-        const size = parseInt(document.getElementById('brushSize').value);
-        
-        // Рисуем локально
-        ctx.beginPath();
-        ctx.moveTo(lastX, lastY);
-        ctx.lineTo(coords.x, coords.y);
-        ctx.strokeStyle = color;
-        ctx.lineWidth = size;
-        ctx.stroke();
-        
-        // Отправляем на сервер ТОЛЬКО если координаты изменились
-        if (coords.x !== lastX || coords.y !== lastY) {
-            sendDrawingData(lastX, lastY, coords.x, coords.y, color, size);
-        }
-        
-        lastX = coords.x;
-        lastY = coords.y;
-    });
-
-    canvas.addEventListener('mouseup', function() {
-        isDrawing = false;
-        console.log("🖱️ MOUSE END");
-    });
-
-    canvas.addEventListener('mouseout', function() {
-        isDrawing = false;
-    });
-}
-
-// === СОБЫТИЯ ДЛЯ ТЕЛЕФОНА - УЛУЧШЕННАЯ ВЕРСИЯ ===
-function setupTouchEvents() {
-    console.log("📱 Setting up TOUCH events");
-    let touchId = null;
-    let lastSentX = 0;
-    let lastSentY = 0;
-    
-    canvas.addEventListener('touchstart', function(e) {
-        e.preventDefault();
-        const coords = getCoordinates(e);
-        isDrawing = true;
-        touchId = e.touches[0].identifier;
-        lastX = coords.x;
-        lastY = coords.y;
-        lastSentX = coords.x;
-        lastSentY = coords.y;
-        
-        console.log(`📱 TOUCH START: ${coords.x}, ${coords.y}`);
-        
-        // На телефоне отправляем первую точку
-        const color = document.getElementById('colorPicker').value;
-        const size = parseInt(document.getElementById('brushSize').value);
-        sendDrawingData(coords.x, coords.y, coords.x, coords.y, color, size);
-    });
-
-    canvas.addEventListener('touchmove', function(e) {
-        if (!isDrawing) return;
-        e.preventDefault();
-        
-        // Находим наше касание
-        let touch = null;
-        for (let i = 0; i < e.touches.length; i++) {
-            if (e.touches[i].identifier === touchId) {
-                touch = e.touches[i];
-                break;
+            if (connection && connection.state === 'Connected') {
+                connection.invoke("ClearCanvas").catch(() => {});
             }
         }
-        
-        if (!touch) return;
-        
-        const rect = canvas.getBoundingClientRect();
-        const x = touch.clientX - rect.left;
-        const y = touch.clientY - rect.top;
-        const scaleX = canvas.width / rect.width;
-        const scaleY = canvas.height / rect.height;
-        
-        const coords = {
-            x: Math.max(0, Math.min(x * scaleX, canvas.width)),
-            y: Math.max(0, Math.min(y * scaleY, canvas.height))
+
+        // === СЕРДЕЧКО ПО КЛАВИШЕ H ===
+        function drawHeart() {
+            const x = canvas.width - 60;
+            const y = canvas.height - 60;
+            const size = 30;
+            
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(x, y + size/4);
+            ctx.bezierCurveTo(x, y, x - size/2, y, x - size/2, y + size/4);
+            ctx.bezierCurveTo(x - size/2, y + size/2, x, y + size, x, y + size);
+            ctx.bezierCurveTo(x, y + size, x + size/2, y + size/2, x + size/2, y + size/4);
+            ctx.bezierCurveTo(x + size/2, y, x, y, x, y + size/4);
+            ctx.closePath();
+            ctx.fillStyle = "#ff6b6b";
+            ctx.fill();
+            ctx.restore();
+            
+            // Отправляем сердечко партнёру
+            if (connection && connection.state === 'Connected') {
+                connection.invoke("SendDrawing", x - size/2, y, x + size/2, y + size, "#ff6b6b", 3)
+                    .catch(() => {});
+            }
+        }
+
+        // === ГОРЯЧИЕ КЛАВИШИ ===
+        function setupKeyboardShortcuts() {
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'h' || e.key === 'H') {
+                    drawHeart();
+                }
+            });
+        }
+
+        // === ЗАПУСК ===
+        window.onload = function() {
+            setupCanvas();
+            setupEvents();
+            startConnection();
+            setupKeyboardShortcuts();
+            
+            // Обновление размера кисти
+            brushSize.addEventListener('input', function() {
+                brushSizeValue.textContent = this.value;
+            });
         };
-        
-        const color = document.getElementById('colorPicker').value;
-        const size = parseInt(document.getElementById('brushSize').value);
-        
-        // Рисуем локально
-        ctx.beginPath();
-        ctx.moveTo(lastX, lastY);
-        ctx.lineTo(coords.x, coords.y);
-        ctx.strokeStyle = color;
-        ctx.lineWidth = size;
-        ctx.stroke();
-        
-        // Отправляем на сервер ТОЛЬКО если координаты значительно изменились
-        const distance = Math.sqrt(Math.pow(coords.x - lastSentX, 2) + Math.pow(coords.y - lastSentY, 2));
-        if (distance > 2) { // Отправляем только если перемещение > 2px
-            sendDrawingData(lastX, lastY, coords.x, coords.y, color, size);
-            lastSentX = coords.x;
-            lastSentY = coords.y;
-        }
-        
-        lastX = coords.x;
-        lastY = coords.y;
-    });
-
-    canvas.addEventListener('touchend', function(e) {
-        e.preventDefault();
-        isDrawing = false;
-        touchId = null;
-        console.log("📱 TOUCH END");
-    });
-
-    canvas.addEventListener('touchcancel', function(e) {
-        e.preventDefault();
-        isDrawing = false;
-        touchId = null;
-    });
-}
-
-// === ОБНОВЛЕНИЕ СТАТУСА ===
-function updateConnectionStatus() {
-    if (userCount === 1) {
-        status.textContent = "✅ Connected! Waiting for partner... 👀";
-        status.className = "status connected";
-    } else {
-        status.textContent = `🎉 ${userCount} users connected! Draw together! 💕`;
-        status.className = "status connected connected-duo pulse";
-    }
-}
-
-function drawLine(startX, startY, endX, endY, color, brushSize) {
-    ctx.strokeStyle = color;
-    ctx.lineWidth = brushSize;
-    ctx.lineJoin = 'round';
-    ctx.lineCap = 'round';
-    
-    ctx.beginPath();
-    ctx.moveTo(startX, startY);
-    ctx.lineTo(endX, endY);
-    ctx.stroke();
-}
-
-function clearCanvas() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    if (connection && connection.state === 'Connected') {
-        connection.invoke("ClearCanvas").catch(console.error);
-    }
-}
-
-function testConnection() {
-    if (connection && connection.state === 'Connected') {
-        console.log("🧪 TEST: Sending line");
-        connection.invoke("SendDrawing", 50, 50, 150, 150, "#ff0000", 8)
-            .then(() => console.log("✅ TEST: Success"))
-            .catch(err => console.log("❌ TEST: Failed", err));
-    }
-}
-
-// === ЗАПУСК ===
-window.onload = function() {
-    setupCanvas();
-    
-    // Определяем тип устройства
-    isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    console.log(`📱 Device: ${isMobile ? 'MOBILE' : 'DESKTOP'}`);
-    
-    if (isMobile) {
-        setupTouchEvents();
-    } else {
-        setupMouseEvents();
-    }
-    
-    startConnection();
-    
-    document.getElementById('brushSize').addEventListener('input', function() {
-        document.getElementById('brushSizeValue').textContent = this.value;
-    });
-    
-    // Тестовая кнопка
-    const testBtn = document.createElement('button');
-    testBtn.textContent = '🧪 Test';
-    testBtn.onclick = testConnection;
-    testBtn.style.marginLeft = '10px';
-    document.querySelector('.tools').appendChild(testBtn);
-    
-    console.log("🚀 APP STARTED");
-};
     </script>
 </body>
 </html>
